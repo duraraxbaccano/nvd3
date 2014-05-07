@@ -1,0 +1,36 @@
+div.row{
+	margin:1%;
+}
+h1.logo{
+	font-size: 50px;
+	text-align: center;
+}
+g.nv-g g.nv-axis g g.tick.major text{
+  font-family : inherit;
+  font-size : 1.2em;
+  fill : #000;
+}
+div#sidebar{
+  width : 10%;
+  height : 100%;
+  position : absolute;
+  left : 0px;
+  top : 50%;
+  font-weight: bold;
+}
+nav#select_bar{
+  display:inline;
+}
+nav#select_bar ul{
+  list-style: none;
+}
+nav#select_bar ul li{
+  width : 100%;
+  padding-top : 1.5em;
+  border-bottom: 1px solid #D9E3DC;
+  font-size: 1.2em;
+}
+nav#select_bar ul li:hover{
+  border-left: 1em solid #D9E3DC;
+  transform : translate(-1em,0);
+}
