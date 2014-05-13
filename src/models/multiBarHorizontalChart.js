@@ -24,8 +24,8 @@ nv.models.multiBarHorizontalChart = function() {
     , stacked = false
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
-        return '<h3>' + key + ' - ' + x + '</h3>' +
-               '<p>' +  y + '</p>'
+        var msg = (showXAxis)? '<h3>'+key+'-'+x+'</h3>'+'<p>'+y+'</p>':'<h3>'+key+'</h3>'+'<p>'+y+'</p>';
+        return msg;
       }
     , x //can be accessed via chart.xScale()
     , y //can be accessed via chart.yScale()
@@ -51,7 +51,9 @@ nv.models.multiBarHorizontalChart = function() {
     .showMaxMin(false)
     .tickFormat(function(d) { 
       if(typeof d == "string")
+      {
         return d.split("_")[1];
+      }
       else
         return d; 
     })
@@ -76,7 +78,7 @@ nv.models.multiBarHorizontalChart = function() {
   //------------------------------------------------------------
 
   var showTooltip = function(e, offsetElement) {
-    var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
+    var left = e.e.clientX,//(e.pos[0]+(offsetElement.offsetLeft||0)), // case 1: *0.5 ; case 2: mousePos
         top = e.pos[1] + ( offsetElement.offsetTop || 0),
         x = xAxis.tickFormat()(multibar.x()(e.point, e.pointIndex)),
         y = yAxis.tickFormat()(multibar.y()(e.point, e.pointIndex)),
@@ -289,8 +291,10 @@ nv.models.multiBarHorizontalChart = function() {
           .scale(gScale)
           .ticks( gdomain.length );
 
+        var gleft = (showXAxis)?0.5*(-margin.left):-10;
+
         g.select('.nv-g.nv-axis')
-         .attr('transform', 'translate('+ 0.5*(-margin.left) +',0)');
+         .attr('transform', 'translate('+gleft+',0)');
         g.select('.nv-g.nv-axis')
          .call(gAxis);
 

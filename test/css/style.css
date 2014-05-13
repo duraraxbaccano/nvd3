@@ -1,5 +1,5 @@
 div.row{
-	margin:1%;
+  display: block;
 }
 h1.logo{
 	font-size: 50px;

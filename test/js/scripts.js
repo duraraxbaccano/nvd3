@@ -1,9 +1,14 @@
 $(document).ready(function(){
   //load raw json file
   $.getJSON("./data.json",function(data){
-
+    if(typeof rawData == "undefined")
+        rawData = data;
+    var data1 = JSON.parse(JSON.stringify(data)); //, data2 = mergeOption(data);
     /*  create a stacked chart from examples */
-    createChart(data);
+    createChart(data,'#chart1 svg');
+
+    /* the chart only shows group axes */
+    createChart(long_short_data,'#chart2 svg',function(obj){obj.showXAxis(false);});
 
   }).fail(function(){
     console.log("Parsing JSON String Failing");
@@ -11,27 +16,32 @@ $(document).ready(function(){
 });
 /* ******************** */
 /* all global variables */
-var leonChart; //access chart out of scope ; Original chart object and new sideBar 
+var charts=[],
+    rawData; //access chart out of scope ; Original chart object and new sideBar
 /* -------------------- */
 
 //create group stack chart
-function createChart(data){
+function createChart(data,pos,func){
 
   nv.addGraph(function() {
     chart = nv.models.multiBarHorizontalChart()
         .x(function(d) { return d.label })
         .y(function(d) { return d.value })
-        .margin({top: 30, right: 20, bottom: 50, left: 175})
+        .margin({top: 30, right: 20, bottom: 50, left: 180})
         //.showValues(true)
         //.tooltips(false)
         .transitionDuration(250)
         .stacked(true)
+        ;
         //.showControls(false);
+    /*  modify attributes by func (not defualt)*/
+    if(func)
+        func(chart);
 
     chart.yAxis
         .tickFormat(d3.format(',.2f'));
 
-    d3.select('#chart1 svg')
+    d3.select(pos)
         .datum(data)
         .call(chart);
 
@@ -39,8 +49,8 @@ function createChart(data){
 
     chart.dispatch.on('stateChange', function(e) { nv.log('New State:', JSON.stringify(e)); });
 
-    //for accessing out of scope
-    leonChart = chart;
+    //accessing out of scope
+    charts.push(chart);
 
     //creating sidebar
     // leonChart.sideBar = createBar(leonChart.gdomain());
@@ -71,6 +81,12 @@ function createChart(data){
   });
 
 }
+/*  Trigger Event out of scope */
+function sendEvent(obj){
+    for(var index=0;index<charts.length;index++){
+        charts[index].dispatch.groupClick(obj);
+    }
+}
 //create sidebar of chart group selection ; avoid calling directly and binded by createChart()
 function createBar(domain){
   if(domain instanceof Array){
@@ -85,4 +101,12 @@ function createBar(domain){
   }
   else 
     return null;
+}
+//Not finished -> change json format (function only for this case)
+function mergeOption(srcData){
+    var destData=srcData.map(function(obj){return JSON.parse(JSON.stringify(obj));});
+    for(var index=0;index<srcData.length;index++)
+        for(var dindex=0;dindex<srcData[index].values.length;dindex++)
+            destData[index].values[dindex].label = destData[index].values[dindex].label.split("_")[0];
+    return destData;
 }
