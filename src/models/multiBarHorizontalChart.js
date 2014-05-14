@@ -35,7 +35,7 @@ nv.models.multiBarHorizontalChart = function() {
     , gstate ={}
     , defaultState = null
     , noData = 'No Data Available.'
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState', 'groupClick' )
+    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'stateChange', 'changeState', 'groupClick', 'seriesChange' )
     , controlWidth = function() { return showControls ? 180 : 0 }
     , transitionDuration = 250
     , showGAxis = true //show group axis
@@ -148,13 +148,11 @@ nv.models.multiBarHorizontalChart = function() {
             if(gdomain.indexOf(glabel) == -1){gdomain.push(glabel);} else;
           });
         });
-        console.log(gdomain);
       }
       if(typeof gstate.disabled == "undefined"){
         gstate.disabled = gdomain.map(function(d){ return !d; });
         gstate.set = gdomain.map(function(d){return d}); //to restore gdomain
         gdomain.forEach(function(d){ gstate[d] = {}; });
-        console.log(gstate);
       }
       //------------------------------------------------------------
       // Setup Scales
@@ -337,7 +335,6 @@ nv.models.multiBarHorizontalChart = function() {
             multibar.stacked(true);
             break;
         }
-
         state.stacked = multibar.stacked();
         dispatch.stateChange(state);
 
@@ -400,12 +397,20 @@ nv.models.multiBarHorizontalChart = function() {
               gdomain.splice(gdomain.indexOf(gstate.set[groupIndex]),1);
               gstate.disabled[groupIndex] = true;
           }
-          console.log(gstate);
-          console.log(data);
         }
         chart.update();
       });
 
+      /* Change series out of scope by Leon */
+      dispatch.on('seriesChange',function(newState){
+        if(!(newState.disabled instanceof Array))
+          return;
+
+        data.forEach(function(series,i){
+          series.disabled = newState.disabled[i];
+        });
+        chart.update();
+      });
       //============================================================
     });
 
@@ -433,8 +438,6 @@ nv.models.multiBarHorizontalChart = function() {
       $.notify(e.point.label+" : "+e.value+"\n("+e.series.key+")",{ className:nColor,position:"top center" });
     else
       alert(e.point.label+" : "+e.value+"\n("+e.series.key+")");
-    console.log("Element Click Event : ");
-    console.log(e);
   });
 
   dispatch.on('tooltipHide', function() {
@@ -454,6 +457,7 @@ nv.models.multiBarHorizontalChart = function() {
   chart.legend = legend;
   chart.xAxis = xAxis;
   chart.yAxis = yAxis;
+  chart.controls = controls;
 
   d3.rebind(chart, multibar, 'x', 'y', 'xDomain', 'yDomain', 'xRange', 'yRange', 'forceX', 'forceY',
     'clipEdge', 'id', 'delay', 'showValues','showBarLabels', 'valueFormat', 'stacked', 'barColor');

@@ -2,13 +2,32 @@ $(document).ready(function(){
   //load raw json file
   $.getJSON("./data.json",function(data){
     if(typeof rawData == "undefined")
-        rawData = data;
-    var data1 = JSON.parse(JSON.stringify(data)); //, data2 = mergeOption(data);
-    /*  create a stacked chart from examples */
-    createChart(data,'#chart1 svg');
+        rawData = data; //data backup 
 
-    /* the chart only shows group axes */
-    createChart(long_short_data,'#chart2 svg',function(obj){obj.showXAxis(false);});
+    var data1 = JSON.parse(JSON.stringify(data)); 
+    /*  create a stacked chart from examples */
+    createChart(data1,'#chart1 svg',function(obj){
+        obj.legend.dispatch.on('stateChange.updateAll',function(newState){ 
+            setTimeout(function(){
+                /* update other charts except the original chart */
+                for(var index=1;index<charts.length;index++)
+                    charts[index].dispatch.seriesChange(newState);
+            },100); 
+        });
+        obj.controls.dispatch.on('legendClick.updateAll',function(d,i){
+            setTimeout(function(){
+                for(var index=1;index<charts.length;index++)
+                    charts[index].controls.dispatch.legendClick(d,i);
+            },100);
+        });
+    });
+
+    /* the chart only shows group axes ; variable 'long_short_data' in temp_data.js */
+    createChart(long_short_data,'#chart2 svg',function(obj){
+        obj.showXAxis(false);
+        obj.showLegend(false);
+        obj.showControls(false);
+    });
 
   }).fail(function(){
     console.log("Parsing JSON String Failing");
@@ -17,7 +36,7 @@ $(document).ready(function(){
 /* ******************** */
 /* all global variables */
 var charts=[],
-    rawData; //access chart out of scope ; Original chart object and new sideBar
+    rawData;
 /* -------------------- */
 
 //create group stack chart
@@ -34,6 +53,7 @@ function createChart(data,pos,func){
         .stacked(true)
         ;
         //.showControls(false);
+
     /*  modify attributes by func (not defualt)*/
     if(func)
         func(chart);
@@ -81,7 +101,7 @@ function createChart(data,pos,func){
   });
 
 }
-/*  Trigger Event out of scope */
+/*  Trigger Group Event out of scope */
 function sendEvent(obj){
     for(var index=0;index<charts.length;index++){
         charts[index].dispatch.groupClick(obj);
